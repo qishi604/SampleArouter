@@ -345,8 +345,8 @@ ARouter.setExecutor();
 2. Fragment 如何接收数据回传？
 
 `ARouter` 并不提供数据回传的接口，这个需要我们自己实现。如 `Activity` 可以在`onActivityResult`接收。
-由于`ARouter` 没有`navigation(Fragment)`这种接口，所以我们可以在 `Activity.onActivityResult` 接收
-数据，然后再回传给 Fragment。
+由于`ARouter` 没有`navigation(Fragment)`这种接口，`Fragment.onActivityResult`是不会调用的，
+我们可以在 `Activity.onActivityResult` 方法里面调用 `Fragment.onActivityResult`。
 
 ```
 // 可以在 BaseActivity 添加如下代码
