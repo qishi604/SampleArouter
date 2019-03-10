@@ -40,6 +40,8 @@ public class LoginInterceptor implements IInterceptor {
 
     @Override
     public void process(Postcard postcard, InterceptorCallback callback) {
+        System.out.println("LoginInterceptor " + this);
+
         if (mIsLogin) {
             callback.onContinue(postcard);
             return;
@@ -65,6 +67,11 @@ public class LoginInterceptor implements IInterceptor {
         }
     }
 
+    /**
+     * 拦截器被初始化时调用，只会调用一次
+     * 即ARouter.init(Application) 的时候会调用
+     * @param context 这个 context 就是 Application
+     */
     @Override
     public void init(Context context) {
         // 注册event bus，接收登录、登出消息，但是没地方注销。。。
@@ -87,7 +94,7 @@ public class LoginInterceptor implements IInterceptor {
         MainLooper.run(new Runnable() {
             @Override
             public void run() {
-                ToastManager.getInstance().shortToast("请先登录");
+                ToastManager.getInstance().longToast("拦截到用户相关页面，未登录，请先登录");
             }
         });
         ARouter.getInstance().build(Constants.USER.LOGIN).navigation();

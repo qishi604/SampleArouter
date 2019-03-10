@@ -15,9 +15,6 @@ import com.sc.service.router.Constants;
 
 /**
  * 用户详情页
- *
- * <p>这个页面本来应该在account module下面的，写在app module 主要为了方便演示</p>
- *
  * @author seven
  * @version 1.0
  * @since 2019/3/9
@@ -33,12 +30,12 @@ public class UserDetailActivity extends BaseActivity {
 
     @Override
     public int getLayoutRes() {
-        return R.layout.activity_user_detail;
+        return R.layout.user_activity_user_detail;
     }
 
     @Override
     public void render(@Nullable Bundle savedInstanceState) {
-        // 调用这个方法，Autowired的属性才能被注入值
+        // 调用这个方法，@Autowired 标注的属性才能被注入值
         ARouter.getInstance().inject(this);
 
         if (null == mUser) {

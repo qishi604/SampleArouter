@@ -12,6 +12,18 @@ public final class Constants {
     /**
      * 用户模块路径
      */
+    public static final class MAIN {
+        /**
+         * 前缀标识
+         */
+        public static final String PREFIX = "/main";
+
+        public static final String SIMPLE = "/main/simple";
+    }
+
+    /**
+     * 用户模块路径
+     */
      public static final class USER {
         /**
          * 前缀，标识跟用户相关
@@ -29,10 +41,6 @@ public final class Constants {
          * 用户详情
          */
         public static final String DETAIL = "/user/detail";
-        /**
-         * 选择用户
-         */
-        public static final String SELECT = "/user/select";
         /**
          * 返回一个用户列表 fragment
          */

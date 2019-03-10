@@ -11,7 +11,7 @@ import com.sc.basiclib.IApp;
  * @version 1.0
  * @since 2019/3/10
  */
-@Route(path = "/service/toast")
+@Route(path = "/service/app")
 public class AppImpl implements IApp {
 
     private Application mApp;

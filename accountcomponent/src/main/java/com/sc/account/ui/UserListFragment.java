@@ -28,7 +28,7 @@ public class UserListFragment extends BaseFragment {
 
     @Override
     public int getLayoutRes() {
-        return R.layout.fragment_list;
+        return R.layout.user_fragment_list;
     }
 
     @Override
@@ -39,7 +39,7 @@ public class UserListFragment extends BaseFragment {
         }
 
         RecyclerView rv = mLayoutView.findViewById(R.id.recyclerView);
-        BaseQuickAdapter<User, UserViewHolder> adapter = new BaseQuickAdapter<User, UserViewHolder>(R.layout.account_item_user) {
+        BaseQuickAdapter<User, UserViewHolder> adapter = new BaseQuickAdapter<User, UserViewHolder>(R.layout.item_user) {
             @Override
             protected void convert(UserViewHolder holder, User item) {
                 holder.bind(item);

@@ -1,6 +1,6 @@
 ## ARouter 配置
 
-1. 在 module (如app)  `build.gradle` 添加依赖。注意，如果有多个 module 用到ARouter注解，每个 module 都需要添加
+1. 在 module (如app)  `build.gradle` 添加依赖。***注意，如果有多个 module 用到`ARouter`注解，每个 module 都需要添加***
 
 ```
 android {
@@ -57,9 +57,9 @@ private void initARouter(Application app) {
 
 4. 使用 gradle 插件实现路由表自动加载（可选）
 
-    可选使用，通过 ARouter 提供的注册插件进行路由表的自动加载(power by [AutoRegister](https://github.com/luckybilly/AutoRegister))， 默认通过扫描 dex 的方式
-    进行加载通过 gradle 插件进行自动注册可以缩短初始化时间解决应用加固导致无法直接访问
-    dex 文件，初始化失败的问题，需要注意的是，该插件必须搭配 api 1.3.0 以上版本使用！
+可选使用，通过 ARouter 提供的注册插件进行路由表的自动加载(power by [AutoRegister](https://github.com/luckybilly/AutoRegister))， 默认通过扫描 dex 的方式
+进行加载通过 gradle 插件进行自动注册可以缩短初始化时间解决应用加固导致无法直接访问
+dex 文件，初始化失败的问题，需要注意的是，该插件必须搭配 api 1.3.0 以上版本使用！
 
 project `build.gradle`
 

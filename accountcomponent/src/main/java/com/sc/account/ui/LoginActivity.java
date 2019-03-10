@@ -20,7 +20,7 @@ public class LoginActivity extends BaseActivity {
 
     @Override
     public int getLayoutRes() {
-        return R.layout.activity_login;
+        return R.layout.user_activity_login;
     }
 
     @Override

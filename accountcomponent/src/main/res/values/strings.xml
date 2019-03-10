@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">AccountComponent</string>
-    <string name="sign_in">登录</string>
-    <string name="prompt_password">密码</string>
-    <string name="prompt_account">账号</string>
+    <string name="user_app_name">AccountComponent</string>
+    <string name="user_sign_in">登录</string>
+    <string name="user_prompt_password">密码</string>
+    <string name="user_prompt_account">账号</string>
 </resources>

@@ -3,6 +3,7 @@ package com.sc.basiclib.util;
 import android.app.Application;
 import android.widget.Toast;
 
+import com.alibaba.android.arouter.facade.annotation.Autowired;
 import com.alibaba.android.arouter.launcher.ARouter;
 import com.sc.basiclib.IApp;
 
@@ -14,6 +15,10 @@ import com.sc.basiclib.IApp;
 public final class ToastManager {
 
     private Application mContext;
+
+    // 使用依赖注入的方式发现服务，通过注解标注字段，inject 调用之后即可使用，无需手动获取
+    @Autowired
+    IApp mApp;
 
     private static class Holder {
         private static final ToastManager INSTANCE = new ToastManager();
@@ -29,9 +34,7 @@ public final class ToastManager {
 
     private Application getContext() {
         if (null == mContext) {
-            // 这个path 应该写到Constants 里面，这里没想好放哪~
-            IApp iApp = (IApp) ARouter.getInstance().build("/service/toast").navigation();
-            mContext = iApp.getApp();
+            mContext = mApp.getApp();
         }
 
         return mContext;

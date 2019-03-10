@@ -5,7 +5,9 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.webkit.WebView;
 
+import com.alibaba.android.arouter.facade.annotation.Autowired;
 import com.alibaba.android.arouter.facade.annotation.Route;
+import com.alibaba.android.arouter.launcher.ARouter;
 import com.sc.basiclib.ui.base.BaseActivity;
 import com.sc.service.router.Constants;
 import com.sc.web.R;
@@ -20,6 +22,9 @@ public class WebActivity extends BaseActivity {
 
     private WebView mWebView;
 
+    @Autowired
+    String url;
+
     @Override
     public int getLayoutRes() {
         return R.layout.activity_web;
@@ -27,9 +32,10 @@ public class WebActivity extends BaseActivity {
 
     @Override
     public void render(@Nullable Bundle savedInstanceState) {
+        ARouter.getInstance().inject(this);
+
         mWebView = findViewById(R.id.webView);
 
-        String url = getIntent().getStringExtra("url");
         if (!TextUtils.isEmpty(url)) {
             mWebView.loadUrl(url);
         }

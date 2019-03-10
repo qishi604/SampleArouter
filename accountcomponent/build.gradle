@@ -7,14 +7,15 @@ if (isApp) {
 }
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion versions.compileSdk
+    resourcePrefix "user_"
 
     defaultConfig {
         if (isApp) {
             applicationId "com.sc.account"
         }
-        minSdkVersion 21
-        targetSdkVersion 28
+        minSdkVersion versions.minSdk
+        targetSdkVersion versions.targetSdk
         versionCode 1
         versionName "1.0"
 

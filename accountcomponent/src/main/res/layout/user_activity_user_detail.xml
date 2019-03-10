@@ -9,7 +9,7 @@
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:layout_marginTop="32dp"
-        android:src="@drawable/ic_person"
+        android:src="@drawable/user_ic_person"
         android:tint="@color/colorAccent"
         />
 
