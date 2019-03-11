@@ -1,6 +1,8 @@
 # ARouter 使用指南
 
-## [ARouter 配置](readme-config.md)
+### [工程简介](readme-app.md)
+
+### [ARouter 配置](readme-config.md)
 
 ## ARouter 的使用
 
