@@ -10,7 +10,7 @@ package com.sc.service.router;
 public final class Constants {
 
     /**
-     * 用户模块路径
+     * 首页模块路径
      */
     public static final class MAIN {
         /**
@@ -50,7 +50,7 @@ public final class Constants {
     }
 
     /**
-     * 用户模块路径
+     * web 模块路径
      */
      public static final class WEB {
         /**

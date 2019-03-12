@@ -7,7 +7,9 @@ import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
+import com.alibaba.android.arouter.facade.annotation.Autowired;
 import com.alibaba.android.arouter.facade.annotation.Route;
+import com.alibaba.android.arouter.launcher.ARouter;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.sc.account.R;
 import com.sc.account.data.UserProvider;
@@ -24,7 +26,8 @@ import com.sc.service.router.Constants;
 @Route(path = Constants.USER.LIST_FRAGMENT)
 public class UserListFragment extends BaseFragment {
 
-    private boolean mIsSelect;
+    @Autowired(name = "select")
+    boolean mIsSelect;
 
     @Override
     public int getLayoutRes() {
@@ -33,10 +36,7 @@ public class UserListFragment extends BaseFragment {
 
     @Override
     public void render(@Nullable Bundle savedInstanceState) {
-        Bundle args = getArguments();
-        if (null != args) {
-            mIsSelect = args.getBoolean("select");
-        }
+        ARouter.getInstance().inject(this);
 
         RecyclerView rv = mLayoutView.findViewById(R.id.recyclerView);
         BaseQuickAdapter<User, UserViewHolder> adapter = new BaseQuickAdapter<User, UserViewHolder>(R.layout.item_user) {

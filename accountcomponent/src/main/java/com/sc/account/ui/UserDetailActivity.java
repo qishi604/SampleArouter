@@ -22,7 +22,7 @@ import com.sc.service.router.Constants;
 @Route(path = Constants.USER.DETAIL)
 public class UserDetailActivity extends BaseActivity {
 
-    @Autowired(name = "user")
+    @Autowired(name = "user", desc = "user object")
     User mUser;
 
     @Autowired(name = "id")

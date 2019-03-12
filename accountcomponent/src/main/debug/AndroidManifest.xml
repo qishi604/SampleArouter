@@ -18,7 +18,7 @@
         </activity>
         <activity
             android:name=".ui.LoginActivity"
-            android:label="@string/title_activity_login"></activity>
+            ></activity>
         <activity android:name=".ui.UserDetailActivity" />
     </application>
 

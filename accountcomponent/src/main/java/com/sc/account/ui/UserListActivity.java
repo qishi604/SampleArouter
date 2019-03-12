@@ -27,10 +27,9 @@ public class UserListActivity extends BaseActivity {
         // 别忘了调用注入
         ARouter.getInstance().inject(this);
 
-        UserListFragment fragment = new UserListFragment();
-        Bundle args = new Bundle();
-        args.putBoolean("select", select);
-        fragment.setArguments(args);
+        Fragment fragment = (Fragment) ARouter.getInstance().build(Constants.USER.LIST_FRAGMENT)
+                .withBoolean("select", select)
+                .navigation();
 
         addFragment(fragment);
     }

@@ -40,7 +40,7 @@ public class LoginInterceptor implements IInterceptor {
 
     @Override
     public void process(Postcard postcard, InterceptorCallback callback) {
-        System.out.println("LoginInterceptor " + this);
+        System.out.println("LoginInterceptor " + postcard.getPath());
 
         if (mIsLogin) {
             callback.onContinue(postcard);
@@ -83,6 +83,8 @@ public class LoginInterceptor implements IInterceptor {
     public void onEvent(LoginStatus event) {
         if (event != null) {
             mIsLogin = event.isLogin;
+
+            System.out.println("接收到登录成功回调 准备跳转登录 mIsLogin " + mIsLogin + " postcard " + mPostcardRef.get() + " callback " + mCallbackRef.get());
 
             if (mIsLogin) {
                 onLoginSuccess();

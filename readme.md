@@ -4,61 +4,317 @@
 
 ### [ARouter 配置](readme-config.md)
 
-## ARouter 的使用
+## API 介绍
 
-### Activity 传递参数跳转，并接收数据回传
+### 注解
 
-1. Activity 添加注解, ***注意，path 至少需要两级，/xxx/xxx***
+#### 1. `@Route` 路由注解
 
 ```java
-@Route(path = "/user/detail")
-public class UserDetailActivity extends BaseActivity {
-    // 通过 name 来映射参数名，如果不指定name，默认以属性名来作为参数名
-    @Autowired(name = "id")
-    String mUserId;
-    
-    @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        // 在使用 @Autowired 标注属性之前，调用 inject 方法
-        ARouter.getInstance().inject(this);
-        
-        Log.d("param", "user id: " + mUserId);
-    }
+
+/**
+* 作用范围：类。只支持 Activity、Service、Fragment (android.app.Fragment 和 android.support.v4.app.Fragment)、IProvider实现类 4种 
+*/
+public @interface Route {
+
+    /**
+     * 路径，通过路径可以跳转到 Activity 或者找到类实例
+     * <b>至少要两层  如: /user/detail</b>
+     */
+    String path();
+
+    /**
+     * 指定分组，默认组名为第一层。如 /user/detail 的默认组名为 user
+     * 注意：如果主动指定分组，应用内路由需要使用 ARouter.getInstance().build(path, group) 进行跳转
+     * 不推荐手动指定
+     */
+    String group() default "";
+
+    /**
+     * 用于生成 javadoc 的 description 字段
+     * 
+     */
+    String name() default "";
+
+    /**
+     * 这个属性是一个 int值，换句话说，单个int有4字节，也就是32位，可以配置32个开关
+     * 剩下的可以自行发挥，通过字节操作可以标识32个开关，通过开关标记目标页面的一些属性，在拦截器中可以拿到这个标记进行业务逻辑判断
+     */
+    int extras() default Integer.MIN_VALUE;
+
+    /**
+     * 优先级，主要用于 IInterceptor。，
+     */
+    int priority() default -1;
+}
+
+```
+
+#### 2. `@interface` 拦截器注解
+
+```java
+
+/**
+* 作用范围：类
+*/
+public @interface Interceptor {
+    /**
+     * 拦截器优先级。多个拦截器会按优先级顺序依次执行，数字越大，优先级越高
+     */
+    int priority();
+
+    /**
+     * 拦截器名字，用于生成 javadoc
+     */
+    String name() default "Default";
+}
+
+```
+
+#### 3. `@Autowired` 注入属性注解
+
+```java
+/**
+* 作用范围：类属性
+*/
+public @interface Autowired {
+
+    /**
+    * 设置参数名，或者 服务（IProvider）path
+    */
+    String name() default "";
+
+    /**
+    * 能否必传。设置为 true 之后，必须要传递，否则会 crash
+    */
+    boolean required() default false;
+
+    // Description of the field
+    /**
+    * 用于生成 javadoc 的 description 字段
+    */
+    String desc() default "";
 }
 ```
 
-2. 发起路由操作，并在 onActivityResult 接收结果
+### 4. `ARouter` API
 
-```java
-public class MainActivity extends BaseActivity {
+```
+ARouter.openLog(); // 开启日志，init 前调用（推荐开发时打开）
+ARouter.openDebug(); // 开启调试模式，init 前调用 (如果在InstantRun模式下运行，必须开启调试模式！线上版本需要关闭,否则有安全风险)
+ARouter.setExecutor(); // 自己提供线程池
+ARouter.setLogger(); // 自己提供 logger
+ARouter.init(getApplication()); // 初始化 （推荐在 Application 调用）
 
-    private void nav() {
-        ARouter.getInstance() // 获取ARouter 单例
-            .build("/user/detail") // 目标 Activity path
-            .withString("id", "10001") // withXxx 方法设置参数，数据类型与Android 的 Bundle 一一对应
-            //.navigation() // 简单的跳转
-            .navigation(this, 11) // 设置Activity 和 request_code 类似于 startActivityForResult()，这样就可以在 onActivityResult 中接收数据
-        ;
-    }
-    
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-       
-        if (resultCode != RESULT_OK && requestCode == 11) {
-            // 这里获取到数据，直接跳转到用户详情
-            data.getSerializableExtra("data");
+ARouter aRouter = ARouter.getInstance(); // 获取 ARouter 单例
+
+ARouter.getInstance().inject(this); // 注入@Autowired 标注的类属性
+
+AppImpl app = ARouter.getInstance().navigation(AppImpl.class); // 获取 IProvider 子类对象
+
+Postcard postcard = ARouter.getInstance().build("/user/detail"); // 获取一个 Postcard 实例
+
+Postcard postcard2 = ARouter.getInstance().build(Uri.parse("/user/detail")); // 获取一个 Postcard 实例
+
+```
+
+### 5. `Postcard` API
+
+`Postcard.withXxx` 设置参数或者转场动画。
+参数与 Intent 的设置类似，如果要传递普通对象（非序列化），需要实现 Json 序列化，见后文
+
+```
+// 直接传递Bundle
+    Bundle params = new Bundle();
+    ARouter.getInstance()
+        .build("/home/main")
+        .with(params)
+        .navigation();
+
+    // 指定Flag
+    ARouter.getInstance()
+        .build("/home/main")
+        .withFlags();
+        .navigation();
+
+    // 获取Fragment
+    Fragment fragment = (Fragment) ARouter.getInstance().build("/test/fragment").navigation();
+                        
+    // 对象传递
+    ARouter.getInstance()
+        .withObject("key", new TestObj("Jack", "Rose"))
+        .navigation();
+
+    // 觉得接口不够多，可以直接拿出Bundle赋值
+    ARouter.getInstance()
+            .build("/home/main")
+            .getExtra();
+
+    // 转场动画(常规方式)
+    ARouter.getInstance()
+        .build("/test/activity2")
+        .withTransition(R.anim.slide_in_bottom, R.anim.slide_out_bottom)
+        .navigation(this);
+
+    // 转场动画(API16+)
+    ActivityOptionsCompat compat = ActivityOptionsCompat.
+        makeScaleUpAnimation(v, v.getWidth() / 2, v.getHeight() / 2, 0, 0);
+
+    // ps. makeSceneTransitionAnimation 使用共享元素的时候，需要在navigation方法中传入当前Activity
+
+    ARouter.getInstance()
+        .build("/test/activity2")
+        .withOptionsCompat(compat)
+        .navigation();
             
-        }
+    // 使用绿色通道(跳过所有的拦截器)
+    ARouter.getInstance().build("/home/main").greenChannel().navigation();
+
+```
+
+`postcard.navigation()` 如果 `@Route` 标识的是 Activity，则跳转到 Activity。其他返回该类实例
+
+```
+
+@Route(path = "/user/list")
+public class UserListActivity extends BaseActivity {
+}
+
+ARouter.getInstance().build("/user/detail").navigation(); // 跳转 Activity
+
+// startActivityForResult
+// navigation的第一个参数是 Activity，第二个参数是 RequestCode
+ARouter.getInstance().build("/user/detail").navigation(activity, 11);
+
+@Route(path = Constants.USER.LIST_FRAGMENT)
+public class UserListFragment extends BaseFragment {
+}
+
+Fragment fragment = (Fragment) ARouter.getInstance().build("/user/list-fragment").navigation(); // 获取 Fragmetn 实例
+
+```
+
+## 项目实战
+
+### 1. 统一路由定义
+
+```java
+public final class Constants {
+
+    /**
+     * 用户模块路径
+     */
+     public static final class USER {
+        /**
+         * 前缀，标识跟用户相关
+         */
+        public static final String PREFIX = "/user";
+        /**
+         * 登录
+         */
+        public static final String LOGIN = "/user/login";
+        /**
+         * 用户列表
+         */
+        public static final String LIST = "/user/list";
+        /**
+         * 用户详情
+         * @param 
+         */
+        public static final String DETAIL = "/user/detail";
+        /**
+         * 返回一个用户列表 fragment
+         */
+        public static final String LIST_FRAGMENT = "/user/list-fragment";
+
+
+    }
+
+    /**
+     * web 模块路径
+     */
+     public static final class WEB {
+        /**
+         * 前缀，标识web相关
+         */
+        public static final String PREFIX = "/web";
+        /**
+         * 一般的web 页
+         * @param url String
+         */
+        public static final String COMMON = "/web/common";
+    }
+}
+
+```
+
+### 2. 设置 Activity、Fragment 路由
+
+```java
+@Route(path = Constants.USER.LIST_FRAGMENT)
+public class UserListFragment extends BaseFragment {
+
+    @Autowired(name = "select")
+    boolean mIsSelect;
+
+    @Override
+    public int getLayoutRes() {
+        return R.layout.user_fragment_list;
+    }
+
+    @Override
+    public void render(@Nullable Bundle savedInstanceState) {
+        ARouter.getInstance().inject(this);
+        // ...
     }
 }
 ```
 
+```java
+@Route(path = Constants.USER.LIST)
+public class UserListActivity extends BaseActivity {
 
-### 拦截器的使用（处理登录、埋点等逻辑）
+    @Autowired
+    boolean select;
 
-拦截器通过 aop 方式自动注册，只需要实现 `IInterceptor` 接口即可。
+    @Override
+    public int getLayoutRes() {
+        return R.layout.fragment_container;
+    }
+
+    @Override
+    public void render(@Nullable Bundle savedInstanceState) {
+        // 别忘了调用注入
+        ARouter.getInstance().inject(this);
+
+        // 获取 Fragment 
+        Fragment fragment = (Fragment) ARouter.getInstance().build(Constants.USER.LIST_FRAGMENT)
+                .withBoolean("select", select)
+                .navigation();
+
+        addFragment(fragment);
+    }
+
+    private void addFragment(Fragment fragment) {
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment, fragment.getClass().getSimpleName()).commit();
+    }
+}
+```
+
+### 3. Activity 跳转
+
+```
+private void pickAUser() {
+// 跳转到 Account 组件的用户列表页面
+ARouter.getInstance().build(Constants.USER.LIST)
+        .withBoolean("select", true)// 传递参数
+        .navigation(this, REQUEST_PICK_USER); // 类似于调用 startActivityForResult
+}
+```
+
+### 4. 定义拦截器
+
+拦截器通过 aop 方式自动注册，只需要实现 `IInterceptor` 接口即可
 
 ```java
 @Interceptor(priority = 8, name = "登录拦截器")
@@ -90,7 +346,7 @@ public class LoginInterceptor implements IInterceptor {
 }
 ```
 
-### 通过依赖注入解耦（可以用于组件间通信）
+### 5. 通过依赖注入解耦（可以用于组件间通信）
 
 ```java
 // 声明接口，其他组件通过接口来调用服务
@@ -120,51 +376,30 @@ public class AppImpl implements IApp {
 使用服务
 
 ```java
-public final class ToastManager {
+public final class ToastUtils {
 
-    private Application mContext;
-    
-    // 使用依赖注入的方式发现服务，通过注解标注字段，inject 调用之后即可使用，无需手动获取
-    @Autowired
-    IApp mApp;
+    private static Application mContext;
 
-    private static class Holder {
-        private static final ToastManager INSTANCE = new ToastManager();
-    }
-
-    public static ToastManager getInstance() {
-        return Holder.INSTANCE;
-    }
-
-    private ToastManager() {
-        ARouter.getInstance().inject(this);
-    }
-
-    private Application getContext() {
+    private static Application getContext() {
         if (null == mContext) {
-            mContext = mApp.getApp();
-            
-            // 使用依赖查找的方式发现服务，这种方式不需要调用 inject
-            // IApp iApp = ARouter.getInstance().navigation(IApp.class); 
-            // IApp iApp = (IApp) ARouter.getInstance().build("/service/app").navigation();
-            // iApp.getApp();
+            // 使用依赖查找的方式发现服务
+            IApp iApp = ARouter.getInstance().navigation(IApp.class);
+//            IApp app = (IApp) ARouter.getInstance().build("/service/app").navigation(); // 这种方式也可以
+            mContext = iApp.getApp();
         }
 
         return mContext;
     }
 
-    public void toast(CharSequence text, int duration) {
+    public static void toast(CharSequence text, int duration) {
         Toast.makeText(getContext(), text, duration).show();
     }
 }
 
 ```
 
-----
+### 6. 设置通过 url 跳转
 
-### 其他姿势
-
-1. 通过URL跳转
 ``` java
 // 新建一个Activity用于监听Schame事件,之后直接把url传递给ARouter即可
 public class SchameFilterActivity extends Activity {
@@ -179,7 +414,8 @@ public class SchameFilterActivity extends Activity {
 }
 ```
 
-AndroidManifest.xml
+`AndroidManifest.xml`
+
 ``` xml
 <activity android:name=".activity.SchameFilterActivity">
     <!-- Schame -->
@@ -196,7 +432,10 @@ AndroidManifest.xml
 </activity>
 ```
 
-2. 自定义全局降级策略
+### 7. 自定义全局降级策略
+
+当路由失败的时候回触发
+
 ``` java
 // 实现DegradeService接口，并加上一个Path内容任意的注解即可
 @Route(path = "/xxx/xxx")
@@ -213,20 +452,38 @@ public class DegradeServiceImpl implements DegradeService {
 }
 ```
 
-3. 为目标页面声明更多信息
-``` java
-// 我们经常需要在目标页面中配置一些属性，比方说"是否需要登陆"之类的
-// 可以通过 Route 注解中的 extras 属性进行扩展，这个属性是一个 int值，换句话说，单个int有4字节，也就是32位，可以配置32个开关
-// 剩下的可以自行发挥，通过字节操作可以标识32个开关，通过开关标记目标页面的一些属性，在拦截器中可以拿到这个标记进行业务逻辑判断
-@Route(path = "/xxx/activity", extras = Consts.XXXX)
+### 8. 实现 Json 序列化服务，利用 json 序列化可以实现传递非序列化类的实例
+
+```
+@Route(path = "/service/json")
+public class JsonServiceImpl implements SerializationService {
+    @Override
+    public void init(Context context) {
+
+    }
+
+    @Override
+    public <T> T json2Object(String text, Class<T> clazz) {
+        return JSON.parseObject(text, clazz);
+    }
+
+    @Override
+    public String object2Json(Object instance) {
+        return JSON.toJSONString(instance);
+    }
+}
 ```
 
-4. 获取原始的URI
+## 其他姿势
+
+### 1. 获取原始的URI
+
 ``` java
 String uriStr = getIntent().getStringExtra(ARouter.RAW_URI);
 ```
 
-5. 重写跳转URL
+### 2. 重写跳转URL
+
 ``` java
 // 实现PathReplaceService接口，并加上一个Path内容任意的注解即可
 @Route(path = "/xxx/xxx") // 必须标明注解
@@ -251,7 +508,7 @@ public class PathReplaceServiceImpl implements PathReplaceService {
 }
 ```
 
-6. 路由中的分组概念
+### 3. 路由中的分组概念
 
 - SDK中针对所有的路径(/test/1 /test/2)进行分组，分组只有在分组中的某一个路径第一次被访问的时候，该分组才会被初始化
 - 可以通过 @Route 注解主动指定分组，否则使用路径中第一段字符串(/*/)作为分组
@@ -260,82 +517,11 @@ public class PathReplaceServiceImpl implements PathReplaceService {
 @Route(path = "/test/1", group = "app")
 ```
 
-7. 拦截器和服务的异同
+### 4. 拦截器和服务的异同
 
 - 拦截器和服务所需要实现的接口不同，但是结构类似，都存在 init(Context context) 方法，但是两者的调用时机不同
 - 拦截器因为其特殊性，会被任何一次路由所触发，拦截器会在ARouter初始化的时候异步初始化，如果第一次路由的时候拦截器还没有初始化结束，路由会等待，直到初始化完成。
 - 服务没有该限制，某一服务可能在App整个生命周期中都不会用到，所以服务只有被调用的时候才会触发初始化操作
-
-
-### 详细的API说明
-
-``` java
-// 构建标准的路由请求
-ARouter.getInstance().build("/home/main").navigation();
-
-// 构建标准的路由请求，并指定分组
-ARouter.getInstance().build("/home/main", "ap").navigation();
-
-// 构建标准的路由请求，通过Uri直接解析
-Uri uri;
-ARouter.getInstance().build(uri).navigation();
-
-// 构建标准的路由请求，startActivityForResult
-// navigation的第一个参数必须是Activity，第二个参数则是RequestCode
-ARouter.getInstance().build("/home/main", "ap").navigation(this, 5);
-
-// 直接传递Bundle
-Bundle params = new Bundle();
-ARouter.getInstance()
-    .build("/home/main")
-    .with(params)
-    .navigation();
-
-// 指定Flag
-ARouter.getInstance()
-    .build("/home/main")
-    .withFlags();
-    .navigation();
-
-// 获取Fragment
-Fragment fragment = (Fragment) ARouter.getInstance().build("/test/fragment").navigation();
-                    
-// 对象传递
-ARouter.getInstance()
-    .withObject("key", new TestObj("Jack", "Rose"))
-    .navigation();
-
-// 觉得接口不够多，可以直接拿出Bundle赋值
-ARouter.getInstance()
-        .build("/home/main")
-        .getExtra();
-
-// 转场动画(常规方式)
-ARouter.getInstance()
-    .build("/test/activity2")
-    .withTransition(R.anim.slide_in_bottom, R.anim.slide_out_bottom)
-    .navigation(this);
-
-// 转场动画(API16+)
-ActivityOptionsCompat compat = ActivityOptionsCompat.
-    makeScaleUpAnimation(v, v.getWidth() / 2, v.getHeight() / 2, 0, 0);
-
-// ps. makeSceneTransitionAnimation 使用共享元素的时候，需要在navigation方法中传入当前Activity
-
-ARouter.getInstance()
-    .build("/test/activity2")
-    .withOptionsCompat(compat)
-    .navigation();
-        
-// 使用绿色通道(跳过所有的拦截器)
-ARouter.getInstance().build("/home/main").greenChannel().navigation();
-
-// 使用自己的日志工具打印日志
-ARouter.setLogger();
-
-// 使用自己提供的线程池
-ARouter.setExecutor();
-```
 
 ## Q&A
 
@@ -372,4 +558,3 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
 
 - [ARouter](https://github.com/alibaba/ARouter)
 - [JIMU](https://github.com/mqzhangw/JIMU)
-
