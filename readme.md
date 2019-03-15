@@ -1,5 +1,9 @@
 # ARouter 使用指南
 
+ARouter 是一个用于帮助 Android App 进行组件化改造的框架 —— 支持模块间的路由、通信、解耦
+
+### [组件化方案介绍](readme-component.md)
+
 ### [工程简介](readme-app.md)
 
 ### [ARouter 配置](readme-config.md)
